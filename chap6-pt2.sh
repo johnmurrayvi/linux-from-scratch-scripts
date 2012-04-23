@@ -257,6 +257,10 @@ cd ..
 rm -rf zlib-1.2.6
 
 
+#############
+# file 5.10 #
+#############
+
 tar xf file-5.10.tar.gz 
 cd file-5.10
 ./configure --prefix=/usr
@@ -266,6 +270,10 @@ make install
 cd ..
 rm -rf file-5.10
 
+
+#################
+# binutils 2.22 #
+#################
 
 tar xf binutils-2.22.tar.bz2 
 cd binutils-2.22
@@ -285,6 +293,10 @@ cd ..
 rm -rf binutils-build/ binutils-2.22
 
 
+#############
+# gmp 5.0.4 #
+#############
+
 tar xf gmp-5.0.4.tar.xz 
 cd gmp-5.0.4
 ./configure --prefix=/usr --enable-cxx --enable-mpbsd
@@ -297,6 +309,10 @@ cp -v doc/{isa_abi_headache,configuration} doc/*.html /usr/share/doc/gmp-5.0.4
 cd ..
 rm -rf gmp-5.0.4
 
+
+##############
+# mpfr 3.1.0 #
+##############
 
 tar xf mpfr-3.1.0.tar.bz2 
 cd mpfr-3.1.0
@@ -312,6 +328,10 @@ cd ..
 rm -rf mpfr-3.1.0
 
 
+###########
+# mpc 0.9 #
+###########
+
 tar xf mpc-0.9.tar.gz 
 cd mpc-0.9
 ./configure --prefix=/usr
@@ -322,44 +342,32 @@ cd ..
 rm -rf mpc-0.9
 
 
+#############
+# gcc 4.6.2 #
+#############
+
 tar xf gcc-4.6.2.tar.bz2 
 cd gcc-4.6.2
-sed -i 's/install_to_$(INSTALL_DIR) //
 sed -i 's/install_to_$(INSTALL_DIR) //' libiberty/Makefile.in 
-case `uname -m` in   i?86) sed -i 's/^T_CFLAGS =$/& -fomit-frame-pointer/'         gcc/Makefile.in ;; esac
+case `uname -m` in
+	i?86) sed -i 's/^T_CFLAGS =$/& -fomit-frame-pointer/' gcc/Makefile.in ;; 
+esac
 sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in 
 mkdir ../gcc-build
 cd ../gcc-build/
-../gcc-4.6.2/configure --prefix=/usr --libexecdir=/usr/lib --enable-shared --enable-threads=posix --eanble-__cxa_atexit --enable-clocale=gnu --enable-languages=c,c++ --disable-multilib --disable-bootstrap --with-system-zlib
 ../gcc-4.6.2/configure --prefix=/usr --libexecdir=/usr/lib --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-languages=c,c++ --disable-multilib --disable-bootstrap --with-system-zlib
 make
 ulimit -s 16384
 make -k check
 grep -A7 Summ
 ../gcc-4.6.2/contrib/test_summary | grep -A7 Summ
-../gcc-4.6.2/contrib/test_summary | grep -A7 Summ
 make install
 ln -sv ../../usr/bin/cpp /lib
+rm /lib/cpp 
+ln -sv ../usr/bin/cpp /lib
 ln -sv gcc /usr/bin/cc
 echo 'main(){}' > dummy.c
 cc dummy.c -v -Wl,--verbose &> dummy.log
-readelf -l a.out | grep ': /lib'
-rm -v a.out dummy.*
-cd ..
-echo 'main(){}' > dummy.c
-cc dummy.c -v -Wl,--verbose &> dummy.log
-readelf -l a.out | grep ': /lib'
-grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log
-find crt1.o
-ls /usr/lib64 | grep crt
-grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log
-echo 'main(){}' > dummy.c
-cc dummy.c -v -Wl,--verbose &> dummy.log
-grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log
-rm /lib/cpp 
-ln -sv ../usr/bin/cpp /lib
-cc dummy.c -v -Wl,--verbose &> dummy.log
-grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log
 grep -o '/usr/lib.*/crt[1in].*succeeded' dummy.log
 grep -B4 '^ /usr/include' dummy.log 
 grep 'SEARCH.*/usr/lib' dummy.log | sed 's|; |\n|g'
@@ -368,11 +376,13 @@ grep found dummy.log
 rm -v dummy.* a.out 
 dirname $(gcc --print-libgcc-file-name)
 cd /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/
-ls
-ls ..
-ls
 cd /sources/
 rm -rf gcc-build gcc-4.6.2 
+
+
+#############
+# sed 4.2.1 #
+#############
 
 tar xf sed-4.2.1.tar.bz2 
 cd sed-4.2.1
@@ -385,6 +395,10 @@ make -C doc install-html
 cd ..
 rm -rf sed-4.2.1
 
+
+##############
+# bzip 1.0.6 #
+##############
 
 tar xf bzip2-1.0.6.tar.gz 
 cd bzip2-1.0.6
@@ -402,6 +416,10 @@ ln -sv bzip2 /bin/bzcat
 cd ..
 rm -rf bzip2-1.0.6
 
+
+###############
+# ncurses 5.9 #
+###############
 
 tar xf ncurses-5.9.tar.gz 
 cd ncurses-5.9
@@ -426,6 +444,10 @@ cp -av lib/lib*.so.5* /usr/lib
 cd ..
 rm -rf ncurses-5.9
 
+
+#####################
+# util-linux 2.20.1 #
+#####################
 
 tar xf util-linux-2.20.1.tar.bz2 
 cd util-linux-2.20.1
