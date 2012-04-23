@@ -482,7 +482,6 @@ tar xf e2fsprogs-1.42.tar.gz
 cd e2fsprogs-1.42
 mkdir build
 cd build/
-PKG_CONFIG=/tools/bin/true LDFLAGS="-lblkid -luuid" ../configure --prefix=/usr --with-root-prefix=/ --enable-elf-shlibs --disable-libblkid --disable-libuuid --disable-uuid --disable-fsck
 PKG_CONFIG=/tools/bin/true LDFLAGS="-lblkid -luuid" ../configure --prefix=/usr --with-root-prefix=/ --enable-elf-shlibs --disable-libblkid --disable-libuuid --disable-uuidd --disable-fsck
 make
 make check
