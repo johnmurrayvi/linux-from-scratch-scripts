@@ -204,10 +204,238 @@ EOF
 mkdir -v /etc/ld.so.conf.d
 
 
-#######################################
-# add missed ones from bash history
-#######################################
+######################
+# readjust toolchain #
+######################
 
+mv -v /tools/bin/{ld,ld-old}
+mv -v /tools/$(gcc -dumpmachine)/bin/{ld,ld-old}
+mv -v /tools/bin/{ld-new,ld}
+ln -sv /tools/bin/ld /tools/$(gcc -dumpmachine)/bin/ld
+gcc -dumpspecs | sed -e 's@/tools@@g' -e '/\*startfile_prefix_spec:/{n;s@.*@/usr/lib/ @}' -e '/\*cpp:/{n;s@$@ -isystem /usr/include@}' > `dirname $(gcc --print-libgcc-file-name)`/specs
+dirname $(gcc --print-libgcc-file-name)
+cat /tools/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/specs 
+echo 'main(){}' > dummy.c
+cc dummy.c -v -W1,--verbose &> dummy.lo
+readelf -l a.out | grep ': /lib'
+which cc
+cc
+ls
+cat dummy.log 
+echo 'main(){}' > dummy.c
+cc dummy.c -v -Wl,--verbose &> dummy.log
+readelf -l a.out | grep ': /lib'
+rm dummy.* a.out 
+echo 'main(){}' > dummy.c
+cc dummy.c -v -Wl,--verbose &> dummy.log
+readelf -l a.out | grep ': /lib'
+grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log 
+grep -Bl '^ /usr/include' dummy.log 
+grep -B1 '^ /usr/include' dummy.log
+grep 'SEARCH.*/usr/lib' dummy.log | sed 's|; |\n|g'
+grep "/lib.*/libc.so.6 " dummy.log 
+grep found dummy.log 
+rm -v a.out dummy.c dummy.log 
+
+
+cd ..
+rm -rf glibc-build/ glibc-2.14.1
+
+##############
+# zlib 1.2.6 #
+##############
+
+tar xf zlib-1.2.6.tar.bz2 
+cd zlib-1.2.6
+./configure --prefix=/usr
+make
+make check
+make install
+mv -v /usr/lib/libz.so.* /lib
+ln -sfv ../../lib/libz.so.1.2.6 /usr/lib/libz.so 
+cd ..
+rm -rf zlib-1.2.6
+
+
+tar xf file-5.10.tar.gz 
+cd file-5.10
+./configure --prefix=/usr
+make
+make check
+make install
+cd ..
+rm -rf file-5.10
+
+
+tar xf binutils-2.22.tar.bz2 
+cd binutils-2.22
+expect -c "spawn ls"
+rm -fv etc/standards.info 
+sed -i.bak '/^INFO/s/standards.info //' etc/Makefile.in 
+sed -i "/exception_defines.h/d" ld/testsuite/ld-elf/new.cc 
+sed -i "s/-fvtable-gc //" ld/testsuite/ld-selective/selective.exp 
+mkdir -v ../binutils-build
+cd ../binutils-build/
+../binutils-2.22/configure --prefix=/usr --enable-shared
+make tooldir=/usr
+make -k check
+make tooldir=/usr install
+cp ../binutils-2.22/include/libiberty.h /usr/include/
+cd ..
+rm -rf binutils-build/ binutils-2.22
+
+
+tar xf gmp-5.0.4.tar.xz 
+cd gmp-5.0.4
+./configure --prefix=/usr --enable-cxx --enable-mpbsd
+make
+make check 2>&1 | tee gmp-check-log
+awk '/tests passed/{total+=$2} ; END{print total}' gmp-check-log
+make install
+mkdir -v /usr/share/doc/gmp-5.0.4
+cp -v doc/{isa_abi_headache,configuration} doc/*.html /usr/share/doc/gmp-5.0.4
+cd ..
+rm -rf gmp-5.0.4
+
+
+tar xf mpfr-3.1.0.tar.bz2 
+cd mpfr-3.1.0
+patch -Np1 ../mpfr-3.1.0-fixes-1.patch 
+patch -Np1 -i ../mpfr-3.1.0-fixes-1.patch
+./configure --prefix=/usr --enable-thread-safe --docdir=/usr/share/doc/mpfr-3.1.0
+make
+make check
+make install
+make html
+make install-html
+cd ..
+rm -rf mpfr-3.1.0
+
+
+tar xf mpc-0.9.tar.gz 
+cd mpc-0.9
+./configure --prefix=/usr
+make
+make check
+make install
+cd ..
+rm -rf mpc-0.9
+
+
+tar xf gcc-4.6.2.tar.bz2 
+cd gcc-4.6.2
+sed -i 's/install_to_$(INSTALL_DIR) //
+sed -i 's/install_to_$(INSTALL_DIR) //' libiberty/Makefile.in 
+case `uname -m` in   i?86) sed -i 's/^T_CFLAGS =$/& -fomit-frame-pointer/'         gcc/Makefile.in ;; esac
+sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in 
+mkdir ../gcc-build
+cd ../gcc-build/
+../gcc-4.6.2/configure --prefix=/usr --libexecdir=/usr/lib --enable-shared --enable-threads=posix --eanble-__cxa_atexit --enable-clocale=gnu --enable-languages=c,c++ --disable-multilib --disable-bootstrap --with-system-zlib
+../gcc-4.6.2/configure --prefix=/usr --libexecdir=/usr/lib --enable-shared --enable-threads=posix --enable-__cxa_atexit --enable-clocale=gnu --enable-languages=c,c++ --disable-multilib --disable-bootstrap --with-system-zlib
+make
+ulimit -s 16384
+make -k check
+grep -A7 Summ
+../gcc-4.6.2/contrib/test_summary | grep -A7 Summ
+../gcc-4.6.2/contrib/test_summary | grep -A7 Summ
+make install
+ln -sv ../../usr/bin/cpp /lib
+ln -sv gcc /usr/bin/cc
+echo 'main(){}' > dummy.c
+cc dummy.c -v -Wl,--verbose &> dummy.log
+readelf -l a.out | grep ': /lib'
+rm -v a.out dummy.*
+cd ..
+echo 'main(){}' > dummy.c
+cc dummy.c -v -Wl,--verbose &> dummy.log
+readelf -l a.out | grep ': /lib'
+grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log
+find crt1.o
+ls /usr/lib64 | grep crt
+grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log
+echo 'main(){}' > dummy.c
+cc dummy.c -v -Wl,--verbose &> dummy.log
+grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log
+rm /lib/cpp 
+ln -sv ../usr/bin/cpp /lib
+cc dummy.c -v -Wl,--verbose &> dummy.log
+grep -o '/usr/lib.*/crt[lin].*succeeded' dummy.log
+grep -o '/usr/lib.*/crt[1in].*succeeded' dummy.log
+grep -B4 '^ /usr/include' dummy.log 
+grep 'SEARCH.*/usr/lib' dummy.log | sed 's|; |\n|g'
+grep "/lib.*/libc.so.6 " dummy.log 
+grep found dummy.log 
+rm -v dummy.* a.out 
+dirname $(gcc --print-libgcc-file-name)
+cd /usr/lib/gcc/x86_64-unknown-linux-gnu/4.6.2/
+ls
+ls ..
+ls
+cd /sources/
+rm -rf gcc-build gcc-4.6.2 
+
+tar xf sed-4.2.1.tar.bz2 
+cd sed-4.2.1
+./configure --prefix=/usr --bindir=/bin --htmldir=/usr/share/doc/sed-4.2.1
+make
+make html
+make check
+make install
+make -C doc install-html
+cd ..
+rm -rf sed-4.2.1
+
+
+tar xf bzip2-1.0.6.tar.gz 
+cd bzip2-1.0.6
+patch -Np1 -i ../bzip2-1.0.6-install_docs-1.patch 
+sed -i 's@\(ln -s -f \)$(PREFIX)/bin/@\1@' Makefile
+make -f Makefile-libbz2_so 
+make
+make PREFIX=/usr install
+cp -v bzip2-shared /bin/bzip2
+cp -av libbz2.so* /lib
+ln -sv ../../lib/libbz2.so.1.0 /usr/lib/libbz2.so
+rm -v /usr/bin/{bunzip2,bzcat,bzip2}
+ln -sv bzip2 /bin/bunzip2
+ln -sv bzip2 /bin/bzcat
+cd ..
+rm -rf bzip2-1.0.6
+
+
+tar xf ncurses-5.9.tar.gz 
+cd ncurses-5.9
+./configure --prefix=/usr --with-shared --without-debug --enable-widec
+make
+make install
+mv -v /usr/lib/libncursesw.so.5* /lib
+ln -sfv ../../lib/libncursesw.so.5 /usr/lib/libncursesw.so 
+for lib in ncurses form panel menu ; do     rm -vf /usr/lib/lib${lib}.so ;     echo "INPUT(-l${lib}w)" >/usr/lib/lib${lib}.so ;     ln -sfv lib${lib}w.a /usr/lib/lib${lib}.a ; done
+ln -sfv libncurses++w.a /usr/lib/libncurses++w.a 
+rm -vf /usr/lib/libcursesw.so
+echo "INPUT(-lncursesw)" > /usr/lib/libcursesw.so
+ln -sfv libncurses.so /usr/lib/libcurses.so
+ln -sfv libncursesw.a /usr/lib/libcursesw.a
+ln -sfv libncurses.a /usr/lib/libcurses.a
+mkdir -v /usr/share/doc/ncurses-5.9
+cp -v -R doc/* /usr/share/doc/ncurses-5.9
+make distclean
+./configure --prefix=/usr --with-shared --without-normal --without-debug --without-cxx-binding
+make sources libs
+cp -av lib/lib*.so.5* /usr/lib
+cd ..
+rm -rf ncurses-5.9
+
+
+tar xf util-linux-2.20.1.tar.bz2 
+cd util-linux-2.20.1
+sed -e 's@etc/adjtime@var/lib/hwclock/adjtime@g' -i $(grep -rl '/etc/adjtime' .)
+mkdir -pv /var/lib/hwclock
+./configure --enable-arch --enable-partx --enable-write
+make
+make install
+cd ..
+rm -rf util-linux-2.20.1
 
 ################
 # psmisc 22.15 #
