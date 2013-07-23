@@ -1,0 +1,169 @@
+#!/bin/bash
+
+for NIC in /sys/class/net/* ; do 
+	INTERFACE=${NIC##*/} udevadm test --action=add $NIC
+done
+
+cat /etc/udev/rules.d/70-persistent-net.rules 
+
+cd /etc/sysconfig/
+
+cat > ifconfig.eth0 << "EOF"
+ONBOOT=yes
+IFACE=eth0
+SERVICE=ipv4-static
+IP=192.168.1.1
+GATEWAY=192.168.1.2
+PREFIX=24
+BROADCAST=192.168.1.255
+EOF
+
+cd ..
+
+cat > /etc/resolv.conf << "EOF"
+# Begin /etc/resolv.conf
+
+nameserver 10.0.1.1
+nameserver 8.8.8.8
+
+# End /etc/resolv.conf
+EOF
+
+cat > /etc/hosts << "EOF"
+# Begin /etc/hosts
+
+127.0.0.1 localhost
+192.168.1.1 lfseth.jjmvi.amd
+
+# End /etc/hosts
+EOF
+
+
+tar xf lfs-bootscripts-20120229.tar.bz2 
+cd lfs-bootscripts-20120229
+make install
+cd ..
+rm -rf lfs-bootscripts-20120229
+
+
+
+cat > /etc/inittab << "EOF"
+id:3:initdefault:
+
+si::sysinit:/etc/rc.d/init.d/rc S
+
+10:0:wait:/etc/rc.d/init.d/rc 0
+11:S1:wait:/etc/rc.d/init.d/rc 1
+12:2:wait:/etc/rc.d/init.d/rc 2
+13:3:wait:/etc/rc.d/init.d/rc 3
+14:4:wait:/etc/rc.d/init.d/rc 4
+15:5:wait:/etc/rc.d/init.d/rc 5
+16:6:wait:/etc/rc.d/init.d/rc 6
+
+ca:12345:ctrlaltdel:/sbin/shutdown -t1 -a -r now
+
+su:S016:once:/sbin/sulogin
+
+1:2345:respawn:/sbin/agetty --noclear tty1 9600
+2:2345:respawn:/sbin/agetty tty2 9600
+3:2345:respawn:/sbin/agetty tty3 9600
+4:2345:respawn:/sbin/agetty tty4 9600
+5:2345:respawn:/sbin/agetty tty5 9600
+6:2345:respawn:/sbin/agetty tty6 9600
+
+EOF
+
+echo "HOSTNAME=jjmvi-amd-lfs" > /etc/sysconfig/network
+
+
+hwclock --localtime --show
+
+cat > /etc/sysconfig/clock << "EOF"
+# Begin /etc/sysconfig/clock
+
+UTC=0
+
+# Set this to any options you might need to give to hwclock,
+# such as machine hardware clock type for Alphas.
+CLOCKPARAMS=
+
+# End /etc/sysconfig/clock
+EOF
+
+
+cat > /etc/sysconfig/console << "EOF"
+LOGLEVEL="7"
+KEYMAP="us"
+FONT="lat1-16 -m 8859-1"
+UNICODE="1"
+
+EOF
+
+vi /etc/sysconfig/rc.site 
+vi /etc/sysconfig/console 
+locale -a
+LC_ALL=en_US.iso88591 locale charmap
+LC_ALL=en_US.iso88591 locale lanugage
+LC_ALL=ISO-8859-1 locale lanugage
+LC_ALL=ISO-8859-1 locale charmap
+LC_ALL=en_US.iso88591 locale charmap
+LC_ALL=en_US.iso88591 locale lanugage
+LC_ALL=en_US locale lanugage
+LC_ALL=en_US locale charmap
+LC_ALL=en_US.iso88591 locale charmap
+LC_ALL=en_US.iso88591 locale language
+LC_ALL=en_US.iso88591 locale int_curr_symbol
+LC_ALL=en_US.iso88591 locale int_prefix
+
+
+cat > /etc/profile << "EOF"
+export LANG=en_US.ISO-8859-1
+
+EOF
+
+
+cat > /etc/inputrc << "EOF"
+# /Begin /etc/inputrc
+
+set horizontal-scroll-mode Off
+
+set meta-flag On
+set input-meta On
+
+set convert-meta Off
+
+set output-meta On
+
+set bell-style none
+
+"\eOd": backward-word
+"\eOc": forward-word
+
+"\e[1~": beginning-of-line
+"\e[4~": end-of-line
+"\e[5~": beginning-of-history
+"\e[6~": end-of-history
+"\e[3~": delete-char
+"\e[2~": quoted-insert
+
+"\eOH": beginning-of-line
+"\eOF": end-of-line
+
+"\e[H": beginning-of-line
+"\e[F": end-of-line
+
+# End /etc/inputrc
+EOF
+
+# NEED TO EDIT /ETC/FSTAB TO OWN SYSTEM/TASTE
+cat > /etc/fstab << "EOF"
+
+/dev/<xxx>     /            <fff>    defaults            1     1
+/dev/<yyy>     swap         swap     pri=1               0     0
+proc           /proc        proc     nosuid,noexec,nodev 0     0
+sysfs          /sys         sysfs    nosuid,noexec,nodev 0     0
+devpts         /dev/pts     devpts   gid=4,mode=620      0     0
+tmpfs          /run         tmpfs    defaults            0     0
+devtmpfs       /dev         devtmpfs mode=0755,nosuid    0     0
+
+EOF
